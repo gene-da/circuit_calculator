@@ -20,4 +20,4 @@ print(f'frequency: {frequency}{omega}')
 print(f'Resonant Frequency: {tank.frequency(metric=True)}Hz (From: {C1}F {L1}H)')
 tank.print_frequency()
 
-tank.print_inductive_reactance(tank.frequency()) #this now
+tank.print_inductive_reactance(tank.frequency()) #this now is
