@@ -1,0 +1,15 @@
+LTspice 24.0.9 for Windows
+Circuit: * C:\Users\eugene.dann\Documents\Development\circuit_development\circuit_sims\AM Circuits\Base Injected\Test AM curcuit\BaseInjectedAM.asc
+Start Time: Tue May 13 16:12:14 2025
+Warning: Multiple definitions of model "2scr375p" Type: BJT
+Warning: Multiple definitions of model "bc857b" Type: BJT
+Warning: Multiple definitions of model "bc847c" Type: BJT
+Warning: Multiple definitions of model "bc847b" Type: BJT
+solver = Normal
+Maximum thread count: 20
+tnom = 27
+temp = 27
+method = modified trap
+Direct Newton iteration for .op point succeeded.
+Total elapsed time: 2.868 seconds.
+

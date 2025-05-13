@@ -1,23 +1,13 @@
-from modules import reactance
-from modules.constants import *
-from modules.resonance import LCTank
+from modules.transformer import *
 
-C1 = '68n'
-L1 = '47u'
-R1 = '33'
-f = '1k'
+N1 = '100u'
+N2 = '200u'
+V1 = '10m'
 
-tank = LCTank(L1, C1)
+ratio = turns_ratio(CoilType.inductor, N1, N2, Output.print)
 
-reactance_raw = reactance.Capacitive.reactance(f, C1)
-reactance_metric = reactance.Capacitive.reactance(f, C1, True)
-frequency = reactance.Capacitive.frequency(reactance_raw, C1, True)
-capacitance = reactance.Capacitive.capacitance(reactance_raw, frequency, True)
+V2 = voltage_transformation(Winding.secondary, ratio, V1, Output.print)
+V1 = voltage_transformation(Winding.primary, ratio, V2, Output.print)
 
-print(f'X (raw): {reactance_raw}{omega}')
-print(f'X (metric): {reactance_metric}{omega}')
-print(f'frequency: {frequency}{omega}')
-print(f'Resonant Frequency: {tank.frequency(metric=True)}Hz (From: {C1}F {L1}H)')
-tank.print_frequency()
 
-tank.print_inductive_reactance(tank.frequency()) #this now is
+print(V2)

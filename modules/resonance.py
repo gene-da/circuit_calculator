@@ -22,7 +22,6 @@ class LCTank:
     def inductive_reactance(self, target_frequency, metric=False):
         frequency = mn.from_metric(target_frequency)
         reactance = react.Inductance.reactance(frequency, self.inductance)
-
         if metric:
             return mn.to_metric(reactance, 2)
         else:
@@ -31,9 +30,10 @@ class LCTank:
     def print_inductive_reactance(self, target_frequency):
         frequency = mn.from_metric(target_frequency)
         reactance = self.inductive_reactance(frequency, True)
-        adj_capacitance = Resonance.capacitance_from_l_f(self.inductance, frequency, True)
-
-        print(f'Frequency: {target_frequency}Hz Inductance: {mn.to_metric(self.inductance, 2)}H Reactance: {reactance}{omega}')
+        adj_capacitance = Resonance.capacitance_from_l_f(self.inductance, 
+                                                         frequency, True)
+        print(f'Frequency: {target_frequency}Hz Inductance: {mn.to_metric(
+            self.inductance, 2)}H Reactance: {reactance}{omega}')
         print(f'Adjust Capacitance: {adj_capacitance}F')
 
 
@@ -43,7 +43,6 @@ class Resonance:
         l = mn.from_metric(inductance)
         c = mn.from_metric(capacitance)
         freq = 1 / (2 * np.pi * np.sqrt(l * c))
-
         if metric:
             return mn.to_metric(freq, 2)
         else:
@@ -53,9 +52,18 @@ class Resonance:
     def capacitance_from_l_f(inductance, frequency, metric=False):
         l = mn.from_metric(inductance)
         f = mn.from_metric(frequency)
-
         capacitance = 1 / (4 * np.power(np.pi, 2) * np.power(f, 2) * l)
         if metric:
             return mn.to_metric(capacitance, 2)
         else:
             return capacitance
+        
+    @staticmethod
+    def inductance_from_c_f(capacitance, frequency, metric=False):
+        c = mn.from_metric(capacitance)
+        f = mn.from_metric(frequency)
+        inductance = 1 / (4 * np.power(np.pi, 2) * c * np.power(f, 2))
+        if metric:
+            return mn.to_metric(inductance, 2)
+        else:
+            return inductance
