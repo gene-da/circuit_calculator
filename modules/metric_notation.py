@@ -1,3 +1,6 @@
+import numpy as np
+import re
+
 def from_metric(s):
     multipliers = {
         'y': 1e-24, 'z': 1e-21, 'a': 1e-18, 'f': 1e-15,
@@ -7,11 +10,9 @@ def from_metric(s):
         'E': 1e18,  'Z': 1e21,  'Y': 1e24
     }
 
-    import re
-
-    # Early return if already a float or int
-    if isinstance(s, (int, float)):
-        return s
+    # Handle native and numpy numeric types
+    if isinstance(s, (int, float, np.number)):
+        return float(s)
 
     s = s.strip()
     match = re.fullmatch(r'(-?\d*\.?\d*)([a-zA-Zµ]?)', s)
@@ -20,7 +21,6 @@ def from_metric(s):
 
     num_str, prefix = match.groups()
     return float(num_str) * multipliers.get(prefix, 1)
-
 
 def to_metric(value, precision=2):
     if value == 0:

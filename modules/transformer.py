@@ -6,7 +6,7 @@ from modules import reactance as react
 
 class CoilType(Enum):
     inductor = auto()
-    winds = auto()
+    windings = auto()
     
 class Transformer:
     def __init__(self, primary, secondary, coil: CoilType):
@@ -14,19 +14,38 @@ class Transformer:
         self.secondaey = mn.from_metric(secondary)
         self.coil = coil
         
+def secondary_load(secondary_impedenace, secondary_inductance, frequency):
+    f = mn.from_metric(frequency)
+    l = mn.from_metric(secondary_inductance)
+    z = mn.from_metric(secondary_impedenace)
+    x = 2 * np.pi * f * l
+    r = abs(z**2 - x**2)
+    if r < 0:
+        raise ValueError("Invalid value: R^2 is NEGATIVE")
+    
+    return abs(r)
 
-def turns_ratio(coil: CoilType, primary_winding, secondary_winding, output: Output=Output.raw):        
+def turns_ratio_inductance(primary, secondary):
+    n1 = mn.from_metric(primary)
+    n2 = mn.from_metric(secondary)
     
-    n1 = mn.from_metric(primary_winding)
-    n2 = mn.from_metric(secondary_winding)
+    return np.sqrt(n1 / n2)
+
+def turns_ratio_windings(primary, secondary):
+    n1 = mn.from_metric(primary)
+    n2 = mn.from_metric(secondary)
     
-    
-    if coil == CoilType.winds:
-        a = n1 / n2
+    return n1 / n2
+
+def turns_ratio(coil: CoilType, primary_coil, secondary_coil, output: Output=Output.raw):
+    if coil == CoilType.windings:
+        a = turns_ratio_windings(primary_coil, secondary_coil)
         if output == Output.metric:
             return mn.to_metric(a, 2)
 
         elif output == Output.print:
+            n1 = mn.to_metric(mn.from_metric(primary_coil), 2)
+            n2 = mn.to_metric(mn.from_metric(secondary_coil), 2)
             print()
             print(f'Primary Turns: {n1}')
             print(f'Secondary Turns: {n2}')
@@ -37,14 +56,16 @@ def turns_ratio(coil: CoilType, primary_winding, secondary_winding, output: Outp
             return a
         
     elif coil == CoilType.inductor:
-        a = np.sqrt( n1 / n2 )
+        a = turns_ratio_inductance(primary_coil, secondary_coil)
         if output == Output.metric:
             return mn.to_metric(a, 2)
 
         elif output == Output.print:
+            n1 = mn.to_metric(mn.from_metric(primary_coil))
+            n2 = mn.to_metric(mn.from_metric(secondary_coil))
             print()
-            print(f'Primary Inductance: {mn.to_metric(n1, 2)}H')
-            print(f'Secondary Inductance: {mn.to_metric(n2, 2)}H')
+            print(f'Primary Inductance: {n1}H')
+            print(f'Secondary Inductance: {n2}H')
             print(f'Turns Ratio: {a}')
             return a
 

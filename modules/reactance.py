@@ -42,7 +42,7 @@ class Inductance:
         reactance = w * l
 
         if metric:
-            return mn.to_metric(x, 2)
+            return mn.to_metric(reactance, 2)
         else:
             return reactance
 

@@ -18,7 +18,7 @@ V3 N008 0 SINE(0 0.3 1500)
 R5 AF N008 {afr}
 R6 AF N009 {afr}
 V4 N009 0 SINE(0 0.1 2000)
-R7 N002 0 1k
+R7 N002 0 50
 L5 N010 AM_IN 150n
 L6 0 N006 100n
 C5 N006 0 250n
@@ -35,7 +35,7 @@ B1 AM_IN 0 V=V(AM)
 K1 L1 L2 1
 K2 L3 L4 1
 K3 L5 L6 1
-.TRAN 1u 8m 3m
+.tran 0 18m 3m
 .param afr 1.5k
 .backanno
 .end
