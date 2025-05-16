@@ -3,10 +3,6 @@ from enum import Enum, auto
 from modules.constants import *
 from modules import metric_notation as mn
 from modules import reactance as react
-
-class CoilType(Enum):
-    inductor = auto()
-    windings = auto()
     
 class Transformer:
     def __init__(self, primary, secondary, coil: CoilType):

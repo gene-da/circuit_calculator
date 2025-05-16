@@ -1,120 +1,71 @@
 from modules.transformer import *
 from modules.sim import *
-from ltspice import Ltspice
+from modules.reading import Reading
+from modules.base_classes import *
+import os
+from tabulate import tabulate
+
 
 raw_file_path = r'C:\Users\eugene.dann\Documents\Development\circuit_development\circuit_sims\AM Circuits\Base Injected\Test AM curcuit\BaseInjectedAM.raw'
-data = get_sim_data(raw_file_path)
 
-def test_function(sim_data: Ltspice, signal: str):
-    data = sim_data.get_data(signal)
-    
-    print()
-    print(f'{signal}')
-    peak = np.max(np.abs(data))
-    print(f'Peak Voltage: {mn.to_metric(peak)}V')
-    
-    peak_peak = np.max(data) -  np.min(data)
-    print(f'Peak to Peak Voltage: {mn.to_metric(peak_peak)}V')
-    
-    rms_mean = np.sqrt(np.mean(data**2))
-    print(f'True RMS Voltage: {mn.to_metric(rms_mean)}V')
-    
-    rms_pp = peak_peak / (2 * np.sqrt(2))
-    print(f'RMS Voltage (PEAK TO PEAK): {mn.to_metric(rms_pp)}V')
-    
-    rms_peak = peak / (np.sqrt(2))
-    print(f'RMS Voltage (PEAK): {mn.to_metric(rms_peak)}V')
-    
-    mean = np.mean(data)
-    print(f'Average Voltage: {mn.to_metric(mean)}V')
+def print_reading_table(readings: list[tuple[str, str, str]]):
+    print(f"{'Signal':<15} {'Value':<12} {'Type':<15}")
+    print("-" * 42)
+    for signal, value, rtype in readings:
+        print(f"{signal:<15} {value:<12} {rtype:<15}")
 
-class Measurment(Enum):
-    pk      = auto()
-    pkpk    = auto()
-    tr_rms  = auto()
-    pp_rms  = auto()
-    pk_rms  = auto()
-    avg     = auto()
-
-class Reading:   
-    class Type(Enum):
-        pk      = auto()
-        pkpk    = auto()
-        tr_rms  = auto()
-        pp_rms  = auto()
-        pk_rms  = auto()
-        avg     = auto()
+class Read:
+    class DMM(Enum):
+        AC = auto()
+        DC = auto()
     
-    @staticmethod
-    def get_signal_type(expr: str) -> str:
-        match = re.match(r'^([IV])\(', expr.strip())
-        if not match:
-            raise ValueError(f"Invalid signal expression: {expr}")
-        return match.group(1)
+    class Oscope:
+        class Coupling(Enum):
+            AC = auto()
+            DC = auto()
+    
+    class Raw(Enum):
+        peak        = auto()
+        pkpk        = auto()
+        true_rms    = auto()
+        pk_rms      = auto()
+        pkpk_rms    = auto()
+        average     = auto()
+
+    
+class Sim(Reading):
+    def __init__(self, sim_data_path):
+        sim = ltspice.Ltspice(sim_data_path)
+        sim.parse()
         
-    @staticmethod
-    def peak(signal_data, signal_name: str, output: Output=Output.raw):
-        reading = np.max(np.abs(signal_data))
+        super().__init__(sim)
         
-        if output == Output.metric:
-            return mn.to_metric(reading)
+        self.results = []
         
-        elif output == Output.print:
-            if Reading.get_signal_type(signal_name) == 'I':
-                print(f'Reading {signal_name}: {mn.to_metric(reading)}Apk')
-                return mn.to_metric(reading)
+    def probe(self, signal: str, type: Read, output: Output=Output.print):
+        if type == Read.DMM.AC or type == Read.Raw.pkpk_rms:
+            print('DMM AC')
+            return self.peak_to_peak_rms(signal, output)
             
-            elif Reading.get_signal_type(signal_name) == 'V':
-                print(f'Reading {signal_name}: {mn.to_metric(reading)}Vpk')
-                return mn.to_metric(reading)
-            
-            else:
-                raise ValueError(f'READING TYPE NOT HANDLED: {Reading.get_signal_type(signal_name)}')
-            
-        else:
-            return reading
+        elif type == Read.DMM.DC or type == Read.Raw.peak:
+            print('DMM DC')
+            return self.peak(signal, output)
         
-    @staticmethod
-    def peak_to_peak(sim_data: Ltspice, signal: str):
-        data = sim_data.get_data(signal)
+        elif type == Read.Oscope.Coupling.AC or type == Read.Raw.pkpk:
+            print('Oscope Coupling AC')
+            return self.peak_to_peak(signal, output)
         
-    @staticmethod
-    def true_rms(sim_data: Ltspice, signal: str):
-        data = sim_data.get_data(signal)
-        
-    @staticmethod
-    def peak_to_peak_rms(sim_data: Ltspice, signal: str):
-        data = sim_data.get_data(signal)
-        
-    @staticmethod
-    def peak_rms(sim_data: Ltspice, signal: str):
-        data = sim_data.get_data(signal)
-        
-    @staticmethod
-    def average(sim_data: Ltspice, signal: str):
-        data = sim_data.get_data(signal)
-    
+        elif type == Read.Oscope.Coupling.DC or type == Read.Raw.average:
+            print('Oscope Coupling DC')
+            return self.peak_rms(signal, output)
 
-    
-def differential(sim: Ltspice, probe: str, reference: str):
-    p = sim.get_data(probe)
-    r = sim.get_data(reference)
-    
-    diff = p - r
-    
-    return diff
-    
-def get_reading(sim: Ltspice, measurment: str, reading_type: Reading):
-    probe, reference = get_separate_signals(measurment)
-    
-    if reference:
-        data = differential(sim, probe, reference)
-        peak = np.max(np.abs(data))
-        print(f'Peak Voltage: {mn.to_metric(peak)}V')
-        
-    else:
-        print(f'Nothing in reference')
-        
+read = Sim(raw_file_path)
 
-Reading.peak(data.get_data('V(carrier)'), 'V(carrier)', Output.print)
-Reading.peak(data.get_data('I(L3)'), 'I(L3)', Output.print)
+results = []
+
+read.peak('V(n003, n005)', Output.print)
+
+read.probe('V(n003)', Read.Oscope.Coupling.AC)
+
+
+
