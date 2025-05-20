@@ -1,71 +1,42 @@
 from modules.transformer import *
-from modules.sim import *
-from modules.reading import Reading
+from modules.spice import *
 from modules.base_classes import *
 import os
 from tabulate import tabulate
+import numpy as np
+import matplotlib.pyplot as plt
 
+raw_file_path_pc = r'C:\Users\eugene.dann\Documents\Development\circuit_development\circuit_sims\AM Circuits\Base Injected\Test AM curcuit\BaseInjectedAM.raw'
+raw_file_path_mac = r'circuit_sims/AM Circuits/Base Injected/Test AM curcuit/BaseInjectedAM.raw'
 
-raw_file_path = r'C:\Users\eugene.dann\Documents\Development\circuit_development\circuit_sims\AM Circuits\Base Injected\Test AM curcuit\BaseInjectedAM.raw'
+sim_path = r'circuit_sims/AM Circuits/Base Injected/Test AM curcuit/BaseInjectedAM.raw'
 
-def print_reading_table(readings: list[tuple[str, str, str]]):
-    print(f"{'Signal':<15} {'Value':<12} {'Type':<15}")
-    print("-" * 42)
-    for signal, value, rtype in readings:
-        print(f"{signal:<15} {value:<12} {rtype:<15}")
+circuit = Spice(sim_path)
+circuit.parse()
 
-class Read:
-    class DMM(Enum):
-        AC = auto()
-        DC = auto()
-    
-    class Oscope:
-        class Coupling(Enum):
-            AC = auto()
-            DC = auto()
-    
-    class Raw(Enum):
-        peak        = auto()
-        pkpk        = auto()
-        true_rms    = auto()
-        pk_rms      = auto()
-        pkpk_rms    = auto()
-        average     = auto()
+carrier = circuit.get_data('V(n005, n003)')
+time = circuit.get_time()
 
-    
-class Sim(Reading):
-    def __init__(self, sim_data_path):
-        sim = ltspice.Ltspice(sim_data_path)
-        sim.parse()
-        
-        super().__init__(sim)
-        
-        self.results = []
-        
-    def probe(self, signal: str, type: Read, output: Output=Output.print):
-        if type == Read.DMM.AC or type == Read.Raw.pkpk_rms:
-            print('DMM AC')
-            return self.peak_to_peak_rms(signal, output)
-            
-        elif type == Read.DMM.DC or type == Read.Raw.peak:
-            print('DMM DC')
-            return self.peak(signal, output)
-        
-        elif type == Read.Oscope.Coupling.AC or type == Read.Raw.pkpk:
-            print('Oscope Coupling AC')
-            return self.peak_to_peak(signal, output)
-        
-        elif type == Read.Oscope.Coupling.DC or type == Read.Raw.average:
-            print('Oscope Coupling DC')
-            return self.peak_rms(signal, output)
+signals = []
+signals.append(Signal(circuit, 'V(carrier)'))
+signals.append(Signal(circuit, 'V(af)'))
+signals.append(Signal(circuit, 'V(am)'))
 
-read = Sim(raw_file_path)
+fig, axs = plt.subplots(len(signals), 1, figsize=(10, 2.5 * len(signals)), sharex=True)
+if len(signals) == 1:
+    axs = [axs]
 
-results = []
+for ax, sig in zip(axs, signals):
+    ax.plot(sig.time, sig.data, label=sig.name)
+    ax.set_ylabel(f"{sig.name} [V]")  # Or whatever unit
+    ax.legend(loc="upper right")
+    ax.grid(True)
 
-read.peak('V(n003, n005)', Output.print)
+axs[-1].set_xlabel("Time [s]")
 
-read.probe('V(n003)', Read.Oscope.Coupling.AC)
+plt.tight_layout()
+plt.show()
+
 
 
 
